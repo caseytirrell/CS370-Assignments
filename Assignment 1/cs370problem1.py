@@ -32,7 +32,7 @@ def plotContour(points, mean, covariance):
     y = np.linspace(min(genPoints[:, 1]) - 1, max(genPoints[:, 1]) + 1, 500)
     X, Y = np.meshgrid(x, y)
     position = np.dstack((X, Y))
-    randomVar = normalMultivariate(mean, covariance, size)
+    randomVar = multivariate_normal(mean, covariance)
     
     plot.figure(figsize=(8,8))
     plot.contour(X, Y, randomVar.pdf(position))
