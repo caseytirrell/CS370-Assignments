@@ -6,16 +6,8 @@ global size
 size = 200
 
 #Question 1 part 1
-def normalMultivariate(m, covariance, size):
-    mean = np.array(m)
-    length = len(mean)
-    cholesky = np.linalg.cholesky(covariance)
-    standardNormal = np.random.standard_normal((size, length))
-    dot = np.dot(standardNormal, cholesky.T) + mean
-    return dot
-
 def genBivariatePoints(m, covariance):
-    points = normalMultivariate(m, covariance, size)
+    points = multivariate_normal.rvs(mean = m, cov = covariance, size = size)
     return points
 
 def plotPoints(points):
