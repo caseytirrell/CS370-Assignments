@@ -7,4 +7,4 @@
 # For Problem 2:
 # Run the program normally. The list of average and projected vectors will be printed in the terminal window. When plotly creates and opens the graph, it will be opened in a web broswer.
 # For Problem 3
-# Run the program normally and the Loss vs Epoch graph will appear
+# Run the program normally and the Loss vs Epoch graph will appear.
