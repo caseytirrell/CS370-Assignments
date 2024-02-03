@@ -80,7 +80,6 @@ print("Sample Size: " + str(sampleSize))
 print("Average Original Vector: " + str(avgOriginal))
 print("Average Projected Vector: " + str(avgProjected) + "\n")
 
-#Problem 2C
 plotVectors(originalVectors, projectedVectors)
 
 #Problem 2A
@@ -94,4 +93,9 @@ plotVectors(originalVectors, projectedVectors)
 #What determines the positive or negative correleations between the components?
 #The negative and positive correlations between the components is determined by
 #by how the variables interact with one another which is encapsulated within
-#the covariance matrix
+#the covariance matrix.
+
+#Problem 2C
+#The plot produced by the algorithm agrees with the positive correlations observed
+#by the original covariance matrix. You can tell this by the shape of the projected
+#vectors 2D plot.
