@@ -25,12 +25,14 @@ class SGD:
         avgLosses = []
         validationLoss = []
         
-        n, d = xTrain.shape #n is number of samples d is number of traits
+        #n is number of samples d is number of traits
+        n, d = xTrain.shape 
         self.weights = np.zeros(d)
         for i in range(self.epochs):
             indices = np.random.permutation(n)
             
             losses = []
+            
             xShuffle = xTrain[indices]
             yShuffle = yTrain[indices].flatten()
             for j in range(0, n, self.bs):
@@ -49,16 +51,15 @@ class SGD:
                 loss = np.mean(trainingErrors ** 2)
                 losses.append(loss)
 
-                grad = np.linalg.norm(gradient)
-                
+                grad = np.linalg.norm(gradient)       
                 if grad < self.tolerance:
-                    break
-            
-            avgLosses.append(np.mean(losses))    
+                    break    
 
             prediction = xValidation.dot(self.weights)
             vError = prediction - yValidation.flatten()
             vLoss = np.mean(vError ** 2)
+            
+            avgLosses.append(np.mean(losses))
             validationLoss.append(vLoss)
             
         return self.weights, avgLosses, validationLoss
@@ -74,7 +75,7 @@ def movingAvg(data, windowSize):
         movingAvg.append(windowAvg)
     return movingAvg
 
-#hyperparameters
+#Hyperparamters used
 lr = 0.01
 epochs = 1000
 bs = 32
@@ -97,6 +98,7 @@ weights, trainingLoss, validationLoss = sgd.training(xTrain, yTrain, xValidation
 windowSize = 100
 smoothedTrainingLoss = movingAvg(trainingLoss, windowSize)
 smoothedValidationLoss = movingAvg(validationLoss, windowSize)
+
 #Plotting the loss vs epoch
 plot.figure(figsize=(8,8))
 plot.plot(smoothedTrainingLoss, color = "blue", label = "Smoothed Training Loss")
