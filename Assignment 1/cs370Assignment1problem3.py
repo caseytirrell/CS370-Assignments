@@ -76,7 +76,7 @@ def movingAvg(data, windowSize):
     return movingAvg
 
 #Hyperparamters used
-lr = 0.01
+lr = 0.001
 epochs = 1000
 bs = 32
 tolerance = 1e-4
