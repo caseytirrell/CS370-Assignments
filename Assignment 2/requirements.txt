@@ -1,0 +1,6 @@
+numpy
+opencv-python
+tensorflow
+tensorflow-hub
+pytube
+psycopg2-binary

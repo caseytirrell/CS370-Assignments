@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import tensorflow as tf
 import tensorflow_hub as tfhub
+from tensorflow.keras import layers, models
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
 from tensorflow.keras.preprocessing import image
 from pytube import YouTube
@@ -136,6 +137,7 @@ def storeDetections(videoID, frameData, dbParams):
     conn = psycopg2.connect(**dbParams)
     cursor = conn.cursor()
 
+    #loops through the index ad the item themselves
     for frame, (timestamp, detections) in enumerate(frameData):
         for detection in detections:
             score = detection['score']
@@ -144,7 +146,7 @@ def storeDetections(videoID, frameData, dbParams):
             className = IDtoClassName.get(classID, "Unknown")
 
             cursor.execute(
-                "INSERT INTO detectedObjects (vidId, frameNum, timestamp, detectedObjId, detectedObjClass, confidence, bbox) VALUES (%s, %s, %s, %s, %s, %s, %s,)"
+                "INSERT INTO detectedObjects (vidId, frameNum, timestamp, detectedObjId, detectedObjClass, confidence, bbox) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 (videoID, frame, timestamp, classID, className, score, bbox)
             )
     conn.commit()
@@ -186,29 +188,31 @@ def storeEmbeddings(videoID, embeddings, dbParams):
     print(f"Embeddings for video {videoID} successfully saved to the database.")
 
 def extractFrames(videoPath, interval=1):
+
     count = 0
     frames = []    
+    timestamps = []
     videoCapture = cv2.VideoCapture(videoPath)
+    fps = videoCapture.get(cv2.CAP_PROP_FPS)
     success, image = videoCapture.read()
     while success:
-        if count % interval == 0:
-            frames.append(image)
+        frames.append(image)
+        timestamps.append(count / fps)
         success, image = videoCapture.read()
         count += 1
     videoCapture.release()
-    return frames
+    return frames, timestamps
 
 def process_video(videoPath, videoID, dbParams, interval=1):
     frameData = []
 
-    frames = extractFrames(videoPath, interval)
+    frames, timestamps = extractFrames(videoPath, interval)
     embeddings = genEmbeddings(frames)
     storeEmbeddings(videoID, embeddings, dbParams)
 
     for i, frame in enumerate(frames):
         detections = detectObjects(frame, detector)
-        # Assuming you have a timestamp or can calculate it
-        timestamp = i * interval  # Placeholder for actual timestamp calculation
+        timestamp = timestamps[i]
         frameData.append((timestamp, detections))
     storeDetections(videoID, frameData, dbParams)
 
