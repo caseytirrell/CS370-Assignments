@@ -3,14 +3,24 @@ import numpy as np
 import cv2
 import tensorflow as tf
 import tensorflow_hub as tfhub
-from tensorflow.keras import layers, models
-from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
-from tensorflow.keras.preprocessing import image
-from pytube import YouTube
 import psycopg2
 import os
 import uuid
+import os
+import requests
+from tensorflow.keras import layers, models
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import BinaryCrossentropy
+from pytube import YouTube
 from urllib.error import URLError
+from pycocotools.coco import COCO
+from prepareCOCOdataset import mainDownloadFunction
+
+INPUT_SHAPE = (224,224,3)
+EMBEDDING_DIM = 128
+TARGET_SIZE = (224, 224)
 
 model = ResNet50(weights='imagenet', include_top=False)
 
@@ -101,6 +111,56 @@ IDtoClassName = {
     90: "toothbrush",
 }
 
+def genDataset(imagePaths, detector):
+    targetSize = TARGET_SIZE
+    croppedObjs = []
+    for i in imagePaths:
+        
+        image = cv2.imread(i)
+        image = cv2.cvtColor(i, cv2.COLOR_BGR2RGB)
+        
+        detections = detectObjects(image, detector)
+        for j in detections:
+            yMin, xMin, yMax, xMax = detection['bbox']
+            crop = image[int(yMin * image.shape[0]):int(yMax * image.shape[0]), int(xMin * image.shape[1]):int(xMax * image.shape[1])]
+            crop = cv2.resize(crop, targetSize)
+            croppedObjs.append(crop)
+    
+    return np.array(croppedObjs)
+
+def autoEncoder():
+    #Following Notes Given in Assignment on 'Builiding Autoencoders using Keras'
+    inputImg = layers.Input(shape=INPUT_SHAPE, name='encoderIn')
+    
+    #Encoder
+    x = layers.Conv2D(16, (3, 3), activation='relu', padding='same')(inputImg)
+    x = layers.MaxPooling2D((2, 2), padding='same')(x)
+    x = layers.Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    x = layers.MaxPooling2D((2, 2), padding='same')(x)
+    x = layers.Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    encoded = layers.MaxPooling2D((2, 2), padding='same')(x)
+
+    flat = layers.Flatten()(encoded)
+    embeddingOut = layers.Dense(EMBEDDING_DIM, activation='relu')(flat)
+
+    #Instead of in notes, the representation here is dependent upon the input size
+
+    #Decoder
+    x = layers.Dense(np.prod([7, 7, 8]), activation='relu')(embeddingOut)
+    x = layers.Reshape((7, 7, 8))(x)
+
+    x = layers.Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    x = layers.UpSampling2D((2, 2))(x)
+    x = layers.Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+    x = layers.UpSampling2D((2, 2))(x)
+    x = layers.Conv2D(16, (3, 3), activation='relu', padding='valid')(x)
+    x = layers.UpSampling2D((2, 2))(x)
+    decoderOut = layers.Conv2D(INPUT_SHAPE[2], (3, 3), activation='sigmoid', padding='same')(x)
+
+    autoencoder = models.Model(inputImg, decoderOut, name='autoencoder')
+    autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
+
+    return autoencoder
 
 def detectObjects(frame, detector):
 
@@ -210,9 +270,18 @@ def process_video(videoPath, videoID, dbParams, interval=1):
     embeddings = genEmbeddings(frames)
     storeEmbeddings(videoID, embeddings, dbParams)
 
+    autoencoder = autoEncoder()
+
     for i, frame in enumerate(frames):
         detections = detectObjects(frame, detector)
         timestamp = timestamps[i]
+        for detection in detections:
+            yMin, xMin, yMax, xMax = detection['bbox']
+            cropImg = frame[int(yMin * frame.shape[0]):int(yMax * frame.shape[0]), int(xMin * frame.shape[1]):int(xMax * frame.shape[1])]
+            cropImg = cv2.resize(cropImg, (224, 224))
+            cropImg = np.expand_dims(cropImg, axis=0)
+
+            embedding = autoencoder.predict(cropImg)[0]
         frameData.append((timestamp, detections))
     storeDetections(videoID, frameData, dbParams)
 
@@ -260,6 +329,9 @@ def downloadVideosAndCaptions(urls, outputPath):
             titles.append(title)
     return titles
 
+def main():
+    mainDownloadFunction()
+
 if __name__ == "__main__":
     outputPath = "/Users/caseytirrell/Documents/CS370-Assignments/Assignment 2"
     dbParams = {
@@ -274,6 +346,7 @@ if __name__ == "__main__":
         "https://www.youtube.com/watch?v=Y-bVwPRy_no"
     ]
 
+    main()
     downloadTitles = downloadVideosAndCaptions(youtubeURLs, outputPath)
 
     for title in downloadTitles:
