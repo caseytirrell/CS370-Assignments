@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_NAME: vidembeddings
+      DB_USER: caseytirrell
+      DB_PASS: Ct1234567!
+    ports:
+      - "8000:8000"
+    volumes:
+      - /Users/caseytirrell/Downloads/annotations
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: vidembeddings
+      POSTGRES_USER: caseytirrell
+      POSTGRES_PASSWORD: Ct1234567!
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+
