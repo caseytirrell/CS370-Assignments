@@ -1,0 +1,10 @@
+{
+    "name": "Remote-Sensing-Project",
+    "image": "soulteary/docker-pytorch-playground:latest",
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "forwardPorts": [8888],
+    "postCreateCommand": "pip install -r requirements.txt",
+    "remoteUser": "vscode"
+}
