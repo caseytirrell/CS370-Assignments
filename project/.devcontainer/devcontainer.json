@@ -1,6 +1,5 @@
 {
     "name": "Remote-Sensing-Project",
-<<<<<<< Updated upstream
     "image": "soulteary/docker-pytorch-playground:latest",
     "settings": {
       "terminal.integrated.shell.linux": "/bin/bash"
@@ -8,7 +7,6 @@
     "forwardPorts": [8888],
     "postCreateCommand": "pip install -r requirements.txt",
     "remoteUser": "vscode"
-=======
     "build": {
         "dockerfile": "Dockerfile",
         "context": "..",
@@ -31,5 +29,4 @@
         "ms-python.python",
         "ms-toolsai.jupyter"
     ]
->>>>>>> Stashed changes
 }
