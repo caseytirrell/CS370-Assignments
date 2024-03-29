@@ -1,1 +1,5 @@
 myenv/
+.DS_Store
+.ipynb_checkpoints/
+*.mp4
+
