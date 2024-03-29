@@ -54,12 +54,12 @@ def detectObjects(frame, detector):
 
 def kalmanFilter():
     print("Starting Kalman Filter...")
-    kf = KalmanFilter(dim_x=7, dim_z=4)  # Example dimensions, adjust based on actual model
-    kf.F = np.eye(7)  # state transition matrix
-    kf.H = np.eye(4, 7)  # measurement function
-    kf.R = np.eye(4) * 0.1  # measurement uncertainty
-    kf.P *= 1000  # covariance matrix
-    kf.Q = np.eye(7) * 0.1  # process uncertainty
+    kf = KalmanFilter(dim_x=7, dim_z=4)
+    kf.F = np.eye(7)
+    kf.H = np.eye(4, 7)
+    kf.R = np.eye(4) * 0.1
+    kf.P *= 1000 
+    kf.Q = np.eye(7) * 0.1
     return kf
 
 def extractAndProcessFrames(videoPath, kalmanFilters, trajectories):
