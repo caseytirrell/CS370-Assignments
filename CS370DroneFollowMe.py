@@ -18,7 +18,7 @@ IDtoClassName = {
     3: "car"
 }
 
-def download_video(url, outputPath):
+def downloadVideo(url, outputPath):
     print(f"Starting {url} Download...")
     try:
         yt = YouTube(url)
@@ -36,23 +36,23 @@ def download_video(url, outputPath):
         traceback.print_exc()
         return None
 
-def detect_objects(frame, detector):
+def detectObjects(frame, detector):
     print("Detecting objects in frame...")
     input_tensor = tf.convert_to_tensor(frame)
     input_tensor = input_tensor[tf.newaxis,...]
 
     detections = detector(input_tensor)
     bbox = detections['detection_boxes'][0].numpy()
-    class_ids = detections['detection_classes'][0].numpy().astype(int)
+    classIDs = detections['detection_classes'][0].numpy().astype(int)
     scores = detections['detection_scores'][0].numpy()
 
     result = []
     for i in range(scores.shape[0]):
         if scores[i] >= 0.5:  # confidence threshold
-            result.append({'bbox': bbox[i], 'class_id': class_ids[i], 'score': scores[i]})
+            result.append({'bbox': bbox[i], 'class_id': classIDs[i], 'score': scores[i]})
     return result
 
-def initialize_kalman_filter():
+def kalmanFilter():
     print("Starting Kalman Filter...")
     kf = KalmanFilter(dim_x=7, dim_z=4)  # Example dimensions, adjust based on actual model
     kf.F = np.eye(7)  # state transition matrix
@@ -62,9 +62,9 @@ def initialize_kalman_filter():
     kf.Q = np.eye(7) * 0.1  # process uncertainty
     return kf
 
-def extract_and_process_frames(video_path, kalmanFilters, trajectories):
-    print(f"Processing video {video_path}")
-    cap = cv2.VideoCapture(video_path)
+def extractAndProcessFrames(videoPath, kalmanFilters, trajectories):
+    print(f"Processing video {videoPath}")
+    cap = cv2.VideoCapture(videoPath)
     processedFrames = []
     frameCount = 0
     while cap.isOpened():
@@ -73,11 +73,11 @@ def extract_and_process_frames(video_path, kalmanFilters, trajectories):
             break
         frameCount += 1
         print(f"Processsing frame {frameCount}")
-        detections = detect_objects(frame, detector)
+        detections = detectObjects(frame, detector)
 
         if not kalmanFilters:
             for i in detections:
-                kf = initialize_kalman_filter()
+                kf = kalmanFilter()
                 kalmanFilters.append(kf)
                 trajectories.append([])
         
@@ -103,17 +103,17 @@ def extract_and_process_frames(video_path, kalmanFilters, trajectories):
     cap.release()
     return processedFrames
 
-def process_video(video_path):
-    print(f"Starting to process video {video_path}")
+def processVideo(videoPath):
+    print(f"Starting to process video {videoPath}")
     kalmanFilters = []
     trajectories = []
-    processedFrames = extract_and_process_frames(video_path, kalmanFilters, trajectories)
+    processedFrames = extractAndProcessFrames(videoPath, kalmanFilters, trajectories)
 
     width= processedFrames[0].shape[1]
     height = processedFrames[0].shape[0]
 
-    output_file_name = os.path.splitext(os.path.basename(video_path))[0] + '_tracked.mp4'
-    output_path = os.path.join(os.path.dirname(video_path), output_file_name)
+    output_file_name = os.path.splitext(os.path.basename(videoPath))[0] + '_tracked.mp4'
+    output_path = os.path.join(os.path.dirname(videoPath), output_file_name)
 
     out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), 25, (width, height))
 
@@ -127,7 +127,7 @@ def process_video(video_path):
 def downloadVideosAndCaptions(urls, outputPath):
     titles = []
     for url in urls:
-        title = download_video(url, outputPath)
+        title = downloadVideo(url, outputPath)
         if title:
             titles.append(title)
     return titles
@@ -144,4 +144,4 @@ if __name__ == "__main__":
     for video in downloadVideos:
         if video is not None:
             videoPath = os.path.join(outputPath, video)
-            process_video(videoPath)
+            processVideo(videoPath)
