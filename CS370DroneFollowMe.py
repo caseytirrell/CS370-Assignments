@@ -102,7 +102,7 @@ def extractAndProcessFrames(videoPath, kalmanFilters, trajectories):
         for i in detections:
             classID = i['class_id']
             if classID in [2, 3]:
-                #bounding box center
+                #bounding box centroid
                 x, y, height, width = i['bbox']
                 kfIndex = 0
                 kf = kalmanFilters[kfIndex]
